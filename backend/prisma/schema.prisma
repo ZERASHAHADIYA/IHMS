@@ -1,0 +1,130 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  ADMIN
+  FACULTY
+  STUDENT
+}
+
+model User {
+  id String @id @default(uuid())
+
+  rollNo     String? @unique
+  employeeId String? @unique
+
+  name String
+
+  email String @unique
+
+  password String
+
+  role Role
+
+  department String
+
+  profileImage String?
+
+  bio String?
+
+  phoneNumber String?
+
+  isActive Boolean @default(true)
+
+  mustChangePassword Boolean @default(true)
+
+  lastSeen DateTime?
+
+  createdAt DateTime @default(now())
+
+  updatedAt            DateTime       @updatedAt
+  conversationsCreated Conversation[] @relation("ConversationCreator")
+
+  conversationMemberships ConversationParticipant[]
+
+  messagesSent Message[] @relation("MessageSender")
+}
+
+model AuditLog {
+  id String @id @default(uuid())
+
+  action String
+
+  performedBy String
+
+  targetUser String?
+
+  metadata Json?
+
+  createdAt DateTime @default(now())
+}
+
+model Conversation {
+  id String @id @default(uuid())
+
+  name String?
+
+  description String?
+
+  isGroup Boolean @default(false)
+
+  isAnnouncement Boolean @default(false)
+
+  createdById String
+
+  createdAt DateTime @default(now())
+
+  updatedAt DateTime @updatedAt
+
+  lastMessageAt DateTime?
+
+  createdBy User @relation("ConversationCreator", fields: [createdById], references: [id])
+
+  participants ConversationParticipant[]
+
+  messages Message[]
+}
+
+model ConversationParticipant {
+  id String @id @default(uuid())
+
+  conversationId String
+
+  userId String
+
+  isAdmin Boolean @default(false)
+
+  joinedAt DateTime @default(now())
+
+  conversation Conversation @relation(fields: [conversationId], references: [id])
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@unique([conversationId, userId])
+}
+
+model Message {
+  id String @id @default(uuid())
+
+  conversationId String
+
+  senderId String
+
+  encryptedContent String
+
+  isEdited Boolean @default(false)
+
+  isDeleted Boolean @default(false)
+
+  createdAt DateTime @default(now())
+
+  conversation Conversation @relation(fields: [conversationId], references: [id])
+
+  sender User @relation("MessageSender", fields: [senderId], references: [id])
+}
