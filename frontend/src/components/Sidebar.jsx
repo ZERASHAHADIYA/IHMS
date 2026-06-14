@@ -1,7 +1,8 @@
 import React, { useState } from "react";
 import { useAuth } from "../context/AuthContext";
 import { disconnectSocket } from "../hooks/useSocket";
-import NewConversationModal from "./NewConversationModal";
+import NewMessageModal from "./NewMessageModal";
+import NewGroupModal from "./NewGroupModal";
 
 function Avatar({ name, size = "md" }) {
   const initials = name
@@ -63,12 +64,13 @@ function ConversationItem({ conv, currentUserId, isActive, onClick }) {
 
 export default function Sidebar({ conversations, activeConvId, onSelectConv, onConvCreated }) {
   const { user, logout } = useAuth();
-  const [showNewConv, setShowNewConv] = useState(false);
+  const [showNewMessage, setShowNewMessage] = useState(false);
+  const [showNewGroup, setShowNewGroup] = useState(false);
   const [search, setSearch] = useState("");
 
   const filtered = conversations.filter((c) => {
     const other = c.participants?.find((p) => p.userId !== user?.userId);
-    const name = c.isGroup ? c.name : other?.user?.name || "";
+    const name = c.isGroup ? (c.name || "") : (other?.user?.name || "");
     return name.toLowerCase().includes(search.toLowerCase());
   });
 
@@ -140,26 +142,40 @@ export default function Sidebar({ conversations, activeConvId, onSelectConv, onC
         )}
       </div>
 
-      {/* New conversation button */}
-      <div className="p-3 border-t border-gray-100">
+      {/* Action buttons */}
+      <div className="p-3 border-t border-gray-100 flex gap-2">
         <button
-          onClick={() => setShowNewConv(true)}
-          className="w-full flex items-center justify-center gap-2 bg-brand-500 hover:bg-brand-600 text-white text-sm font-medium py-2.5 rounded-xl transition"
+          onClick={() => setShowNewMessage(true)}
+          className="flex-1 flex items-center justify-center gap-1.5 bg-brand-500 hover:bg-brand-600 text-white text-sm font-medium py-2.5 rounded-xl transition"
         >
           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+              d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
           </svg>
-          New conversation
+          Message
+        </button>
+        <button
+          onClick={() => setShowNewGroup(true)}
+          className="flex-1 flex items-center justify-center gap-1.5 bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-medium py-2.5 rounded-xl transition"
+        >
+          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+              d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
+          </svg>
+          Group
         </button>
       </div>
 
-      {showNewConv && (
-        <NewConversationModal
-          onClose={() => setShowNewConv(false)}
-          onCreated={(conv) => {
-            setShowNewConv(false);
-            onConvCreated(conv);
-          }}
+      {showNewMessage && (
+        <NewMessageModal
+          onClose={() => setShowNewMessage(false)}
+          onCreated={(conv) => { setShowNewMessage(false); onConvCreated(conv); }}
+        />
+      )}
+      {showNewGroup && (
+        <NewGroupModal
+          onClose={() => setShowNewGroup(false)}
+          onCreated={(conv) => { setShowNewGroup(false); onConvCreated(conv); }}
         />
       )}
     </div>
