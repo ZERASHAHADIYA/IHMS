@@ -16,3 +16,5 @@ RUN /etc/init.d/postgresql start \
 	&& echo "listen_addresses = '*'" >> /etc/postgresql/18/main/postgresql.conf \
 	&& echo 'host    all    all    0.0.0.0/0    scram-sha-256' >> /etc/postgresql/18/main/pg_hba.conf \
 	&& /etc/init.d/postgresql stop
+
+CMD bash /etc/init.d/postgresql start && exec bash
