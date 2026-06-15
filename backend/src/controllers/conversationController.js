@@ -46,9 +46,28 @@ const createConversation = async (req, res) => {
         },
 
         include: {
-          participants: true
+                
+          participants: {
+          
+            include: {
+            
+              user: {
+              
+                select: {
+                  id: true,
+                  name: true,
+                  email: true,
+                  profileImage: true
+                }
+              
+              }
+            
+            }
+          
+          }
+        
         }
-
+        
       });
 
     res.status(201).json(
