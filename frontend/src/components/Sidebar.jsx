@@ -3,6 +3,7 @@ import { useAuth } from "../context/AuthContext";
 import { disconnectSocket } from "../hooks/useSocket";
 import NewMessageModal from "./NewMessageModal";
 import NewGroupModal from "./NewGroupModal";
+import ConfirmLogoutModal from "./ConfirmLogoutModal";
 
 function Avatar({ name, size = "md" }) {
   const initials = name
@@ -66,6 +67,7 @@ export default function Sidebar({ conversations, activeConvId, onSelectConv, onC
   const { user, logout } = useAuth();
   const [showNewMessage, setShowNewMessage] = useState(false);
   const [showNewGroup, setShowNewGroup] = useState(false);
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const [search, setSearch] = useState("");
 
   const filtered = conversations.filter((c) => {
@@ -95,7 +97,7 @@ export default function Sidebar({ conversations, activeConvId, onSelectConv, onC
               </span>
             )}
             <button
-              onClick={handleLogout}
+              onClick={() => setShowLogoutConfirm(true)}
               title="Sign out"
               className="p-1.5 rounded-lg hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition ml-1"
             >
@@ -176,6 +178,16 @@ export default function Sidebar({ conversations, activeConvId, onSelectConv, onC
         <NewGroupModal
           onClose={() => setShowNewGroup(false)}
           onCreated={(conv) => { setShowNewGroup(false); onConvCreated(conv); }}
+        />
+      )}
+      
+      {showLogoutConfirm && (
+        <ConfirmLogoutModal
+          onCancel={() => setShowLogoutConfirm(false)}
+          onConfirm={() => {
+            setShowLogoutConfirm(false);
+            handleLogout();
+          }}
         />
       )}
     </div>
