@@ -37,6 +37,8 @@ const createConversation = async (req, res) => {
                 id => ({
                   userId: id
                 })
+
+                
               )
 
             ]
@@ -69,6 +71,24 @@ const createConversation = async (req, res) => {
         }
         
       });
+
+      const { getIO } =
+      require("../socket/socketInstance");
+
+      const io = getIO();
+          
+      conversation.participants.forEach(
+        (p) => {
+        
+          io.to(
+            `user:${p.user.id}`
+          ).emit(
+            "newConversation",
+            conversation
+          );
+        
+        }
+      );
 
     res.status(201).json(
       conversation

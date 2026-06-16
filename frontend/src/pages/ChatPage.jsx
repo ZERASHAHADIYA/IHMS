@@ -44,6 +44,49 @@ export default function ChatPage() {
     return () => socket.off("newMessage", handler);
   }, [socketRef]);
 
+  useEffect(() => {
+
+  const socket =
+    socketRef.current;
+
+  if (!socket) return;
+
+  const handler =
+    (conversation) => {
+
+      setConversations(
+        (prev) => {
+
+          const exists =
+            prev.find(
+              c => c.id === conversation.id
+            );
+
+          if (exists)
+            return prev;
+
+          return [
+            conversation,
+            ...prev
+          ];
+        }
+      );
+
+    };
+
+  socket.on(
+    "newConversation",
+    handler
+  );
+
+  return () =>
+    socket.off(
+      "newConversation",
+      handler
+    );
+
+  }, [socketRef]);
+
   const handleConvCreated = (conv) => {
     setConversations((prev) => {
       const exists = prev.find((c) => c.id === conv.id);

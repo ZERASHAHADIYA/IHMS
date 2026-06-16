@@ -74,6 +74,9 @@ const socketHandler = (io) => {
           `Joined ${conversationId}`
 
         );
+        socket.join(
+          `user:${socket.user.userId}`
+        );
 
       }
 
