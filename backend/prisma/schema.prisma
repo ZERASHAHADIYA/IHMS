@@ -76,6 +76,8 @@ model Conversation {
 
   isAnnouncement Boolean @default(false)
 
+  uniqueKey String? @unique
+
   createdById String
 
   createdAt DateTime @default(now())

@@ -10,14 +10,36 @@ const createConversation = async (req, res) => {
       isGroup
     } = req.body;
 
-    const conversation =
-      await prisma.conversation.create({
+    let uniqueKey = null;
+
+if (!isGroup) {
+
+  const otherUserId = participantIds[0];
+
+  uniqueKey = [
+    req.user.userId,
+    otherUserId
+  ].sort().join("_");
+
+}
+
+    // const conversation =
+    //   await prisma.conversation.create({
+
+    let conversation;
+
+    try {
+    
+      conversation =
+        await prisma.conversation.create({
 
         data: {
 
           name,
 
           isGroup,
+
+          uniqueKey,
 
           createdById:
             req.user.userId,
@@ -71,6 +93,51 @@ const createConversation = async (req, res) => {
         }
         
       });
+
+    } catch (error) {
+
+  if (
+    error.code === "P2002" &&
+    uniqueKey
+  ) {
+
+    conversation =
+      await prisma.conversation.findUnique({
+
+        where: {
+          uniqueKey
+        },
+
+        include: {
+
+          participants: {
+
+            include: {
+
+              user: {
+
+                select: {
+                  id: true,
+                  name: true,
+                  email: true,
+                  profileImage: true
+                }
+
+              }
+
+            }
+
+          }
+
+        }
+
+      });
+
+  } else {
+    throw error;
+  }
+
+}
 
       const { getIO } =
       require("../socket/socketInstance");

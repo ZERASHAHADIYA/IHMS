@@ -87,17 +87,23 @@ async function main() {
     },
   });
 
-  const direct1 = await prisma.conversation.create({
-    data: {
-      createdById: admin.id,
-    },
-  });
+  const direct1Users = [admin.id, studentUsers[0].id].sort();
 
-  const direct2 = await prisma.conversation.create({
-    data: {
-      createdById: facultyUsers[0].id,
-    },
-  });
+const direct1 = await prisma.conversation.create({
+  data: {
+    createdById: admin.id,
+    uniqueKey: direct1Users.join("_"),
+  },
+});
+
+const direct2Users = [facultyUsers[0].id, studentUsers[1].id].sort();
+
+const direct2 = await prisma.conversation.create({
+  data: {
+    createdById: facultyUsers[0].id,
+    uniqueKey: direct2Users.join("_"),
+  },
+});
 
   for (const user of allUsers) {
     await prisma.conversationParticipant.create({
