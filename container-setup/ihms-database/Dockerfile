@@ -17,4 +17,4 @@ RUN /etc/init.d/postgresql start \
 	&& echo 'host    all    all    0.0.0.0/0    scram-sha-256' >> /etc/postgresql/18/main/pg_hba.conf \
 	&& /etc/init.d/postgresql stop
 
-CMD bash /etc/init.d/postgresql start && exec bash
+CMD bash /etc/init.d/postgresql start && echo 'started server' && exec bash
