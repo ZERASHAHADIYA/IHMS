@@ -1,4 +1,7 @@
-set -e
+set -o errexit
+set -o pipefail
+set -o nounset
+
 # Download and install nvm:
 curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.5/install.sh | bash
 

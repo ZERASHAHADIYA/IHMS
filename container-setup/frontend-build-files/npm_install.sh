@@ -1,4 +1,6 @@
-set -xe
+set -o errexit
+set -o pipefail
+set -o nounset
 
 dirname=$1
 
