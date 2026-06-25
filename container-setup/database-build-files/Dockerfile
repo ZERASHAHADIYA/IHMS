@@ -1,20 +1,19 @@
 FROM docker.io/library/debian:stable
-ENV POSTGRES_PASSWORD=new_password
 ENV POSTGRES_DB=campus_messaging
+ENV POSTGRES_PASSWORD=new_password
 
-RUN echo 'installing postgresql...'
-RUN apt update && apt install ca-certificates -y
+RUN echo 'copying postgres starting script to /root'
+COPY ./container-setup/database-build-files/database_start.sh /root
+
+RUN echo 'placing necessary files for postgres installation to required locations'
+COPY ./container-setup/database-build-files/apt.postgresql.org.asc /usr/share/postgresql-common/pgdg/
 RUN mkdir -p /usr/share/postgresql-common/pgdg
-COPY ./apt.postgresql.org.asc /usr/share/postgresql-common/pgdg/
-COPY ./pgdg.sources /etc/apt/sources.list.d/pgdg.sources
+COPY ./container-setup/database-build-files/pgdg.sources /etc/apt/sources.list.d/
+
+RUN echo 'installing ca-certificates'
+RUN apt update && apt install ca-certificates -y
+
+RUN echo 'installing postgresql-18'
 RUN apt update && apt install postgresql-18 -y
 
-RUN echo 'setting up postgresql...'
-RUN /etc/init.d/postgresql start \
-	&& su - postgres -c "psql -c \"ALTER USER postgres WITH PASSWORD '$POSTGRES_PASSWORD'\";" \
-	&& su - postgres -c "psql -c 'CREATE DATABASE $POSTGRES_DB;'" \
-	&& echo "listen_addresses = '*'" >> /etc/postgresql/18/main/postgresql.conf \
-	&& echo 'host    all    all    0.0.0.0/0    scram-sha-256' >> /etc/postgresql/18/main/pg_hba.conf \
-	&& /etc/init.d/postgresql stop
-
-CMD bash /etc/init.d/postgresql start && echo 'started server' && exec bash
+CMD bash /root/database_start.sh "$POSTGRES_DB" "$POSTGRES_PASSWORD"
