@@ -49,7 +49,7 @@ const socketHandler = (io) => {
 
   });
 
-  io.on("connection", (socket) => {
+  io.on("connection", async (socket) => {
 
     console.log(
 
@@ -58,6 +58,27 @@ const socketHandler = (io) => {
       socket.user.userId
 
     );
+
+    const prisma =
+require("../config/prisma");
+
+await prisma.user.update({
+
+  where: {
+
+    id: socket.user.userId
+
+  },
+
+  data: {
+
+    isActive: true
+
+  }
+
+});
+
+
 
     socket.on(
 
@@ -82,23 +103,69 @@ const socketHandler = (io) => {
 
     );
 
+
     socket.on(
 
-      "disconnect",
+  "typing",
 
-      () => {
+  ({ conversationId }) => {
 
-        console.log(
+    socket.to(conversationId).emit(
 
-          "User Disconnected:",
+      "userTyping",
 
-          socket.user.userId
+      {
 
-        );
+        userId: socket.user.userId
 
       }
 
     );
+
+  }
+
+);
+
+socket.on(
+
+  "stopTyping",
+
+  ({ conversationId }) => {
+
+    socket.to(conversationId).emit(
+
+      "userStoppedTyping",
+
+      {
+
+        userId: socket.user.userId
+
+      }
+
+    );
+
+  }
+
+);
+
+ socket.on("disconnect", async (reason) => {
+
+  console.log("DISCONNECT EVENT FIRED");
+  console.log("Reason:", reason);
+
+  await prisma.user.update({
+    where: {
+      id: socket.user.userId
+    },
+    data: {
+      isActive: false,
+      lastSeen: new Date()
+    }
+  });
+
+  console.log("Updated user offline");
+
+});
 
   });
 

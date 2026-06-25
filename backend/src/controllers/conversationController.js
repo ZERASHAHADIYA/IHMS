@@ -249,6 +249,52 @@ const addParticipant = async (req, res) => {
       });
 
     }
+   const admin =
+  await prisma.conversationParticipant.findFirst({
+
+    where: {
+
+      conversationId: id,
+
+      userId: req.user.userId,
+
+      isAdmin: true
+
+    }
+
+  });
+
+if (!admin) {
+
+  return res.status(403).json({
+
+    message: "Only group admins can add participants"
+
+  });
+
+}
+    const existingParticipant =
+  await prisma.conversationParticipant.findFirst({
+
+    where: {
+
+      conversationId: id,
+
+      userId
+
+    }
+
+  });
+
+if (existingParticipant) {
+
+  return res.status(400).json({
+
+    message: "User is already a participant"
+
+  });
+
+}
 
     const participant =
       await prisma.conversationParticipant.create({
@@ -295,6 +341,32 @@ const removeParticipant = async (req, res) => {
         }
 
       });
+  
+    const admin =
+  await prisma.conversationParticipant.findFirst({
+
+    where: {
+
+      conversationId: id,
+
+      userId: req.user.userId,
+
+      isAdmin: true
+
+    }
+
+  });
+
+if (!admin) {
+
+  return res.status(403).json({
+
+    message: "Only group admins can remove participants"
+
+  });
+
+}
+
 
     if (!participant) {
 

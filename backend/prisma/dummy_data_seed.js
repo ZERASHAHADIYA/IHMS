@@ -4,13 +4,13 @@ const prisma = new PrismaClient();
 
 async function main() {
   console.log("Seeding database...");
-
   await prisma.message.deleteMany();
   await prisma.conversationParticipant.deleteMany();
   await prisma.conversation.deleteMany();
   await prisma.auditLog.deleteMany();
   await prisma.user.deleteMany();
 
+  
   const admin = await prisma.user.create({
     data: {
       name: "System Admin",
