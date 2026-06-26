@@ -89,6 +89,39 @@ const sendMessage = async (req, res) => {
 
       });
 
+      // Get all participants in the conversation
+const participants =
+  await prisma.conversationParticipant.findMany({
+
+    where: {
+      conversationId
+    }
+
+  });
+
+// Create receipt for every participant
+await prisma.messageReceipt.createMany({
+
+  data: participants.map((participant) => ({
+
+    messageId: message.id,
+
+    userId: participant.userId,
+
+    deliveredAt:
+      participant.userId === req.user.userId
+        ? new Date()
+        : null,
+
+    seenAt:
+      participant.userId === req.user.userId
+        ? new Date()
+        : null
+
+  }))
+
+});
+
     // Update conversation activity
 
     await prisma.conversation.update({
@@ -194,21 +227,41 @@ const getMessages = async (req, res) => {
 
         include: {
 
-          sender: {
+  sender: {
 
-            select: {
+    select: {
 
-              id: true,
+      id: true,
 
-              name: true,
+      name: true,
 
-              role: true
+      role: true
 
-            }
+    }
 
-          }
+  },
 
-        },
+  receipts: {
+
+    include: {
+
+      user: {
+
+        select: {
+
+          id: true,
+
+          name: true
+
+        }
+
+      }
+
+    }
+
+  }
+
+},
 
         orderBy: {
 
@@ -462,16 +515,136 @@ const deleteMessage = async (req, res) => {
   }
 
 };
+const markDelivered = async (req, res) => {
 
+  try {
+
+    const { conversationId } = req.params;
+
+    await prisma.messageReceipt.updateMany({
+
+      where: {
+
+        userId: req.user.userId,
+
+        deliveredAt: null,
+
+        message: {
+
+          conversationId
+
+        }
+
+      },
+
+      data: {
+
+        deliveredAt: new Date()
+
+      }
+
+    });
+
+    const io = getIO();
+
+io.to(conversationId).emit(
+  "messagesDelivered",
+  {
+    conversationId,
+    userId: req.user.userId
+  }
+);
+
+    res.json({
+
+      message: "Messages marked as delivered"
+
+    });
+
+  } catch (error) {
+
+    console.log(error);
+
+    res.status(500).json({
+
+      message: "Server Error"
+
+    });
+
+  }
+
+};
+
+
+const markSeen = async (req, res) => {
+
+  try {
+
+    const { conversationId } = req.params;
+
+    await prisma.messageReceipt.updateMany({
+
+      where: {
+
+        userId: req.user.userId,
+
+        seenAt: null,
+
+        message: {
+
+          conversationId
+
+        }
+
+      },
+
+      data: {
+
+        seenAt: new Date()
+
+      }
+
+    });
+  
+    const io = getIO();
+
+io.to(conversationId).emit(
+  "messagesSeen",
+  {
+    conversationId,
+    userId: req.user.userId
+  }
+);
+
+    res.json({
+
+      message: "Messages marked as seen"
+
+    });
+
+  } catch (error) {
+
+    console.log(error);
+
+    res.status(500).json({
+
+      message: "Server Error"
+
+    });
+
+  }
+
+};
 
 module.exports = {
 
   sendMessage,
-
   getMessages,
-
   editMessage,
-
-  deleteMessage
-
+  deleteMessage,
+  markDelivered,
+  markSeen
 };
+
+
+  

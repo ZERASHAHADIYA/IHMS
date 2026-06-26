@@ -11,7 +11,9 @@ const {
   sendMessage,
   getMessages,
   editMessage,
-  deleteMessage
+  deleteMessage,
+  markDelivered,
+  markSeen
 } =
 require("../controllers/messageController");
 
@@ -37,6 +39,18 @@ router.delete(
   "/:id",
   authMiddleware,
   deleteMessage
+);
+
+router.patch(
+  "/:conversationId/delivered",
+  authMiddleware,
+  markDelivered
+);
+
+router.patch(
+  "/:conversationId/seen",
+  authMiddleware,
+  markSeen
 );
 
 module.exports = router;

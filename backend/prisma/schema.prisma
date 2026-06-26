@@ -48,7 +48,8 @@ model User {
 
   conversationMemberships ConversationParticipant[]
 
-  messagesSent Message[] @relation("MessageSender")
+  messageReceipts MessageReceipt[]
+  messagesSent    Message[]        @relation("MessageSender")
 }
 
 model AuditLog {
@@ -63,6 +64,23 @@ model AuditLog {
   metadata Json?
 
   createdAt DateTime @default(now())
+}
+
+model MessageReceipt {
+  id String @id @default(uuid())
+
+  messageId String
+  userId    String
+
+  deliveredAt DateTime?
+  seenAt      DateTime?
+
+  message Message @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([messageId, userId])
+  @@index([messageId])
+  @@index([userId])
 }
 
 model Conversation {
@@ -122,7 +140,8 @@ model Message {
 
   isEdited Boolean @default(false)
 
-  isDeleted Boolean @default(false)
+  isDeleted Boolean          @default(false)
+  receipts  MessageReceipt[]
 
   createdAt DateTime @default(now())
 
