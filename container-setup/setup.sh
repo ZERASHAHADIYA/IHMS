@@ -2,8 +2,14 @@ set -o errexit
 set -o pipefail
 set -o nounset
 
+
+error() {
+	echo "error: $1"
+	exit 1
+}
+
 log() {
-	echo -e "log: $1"
+	echo "log: $1"
 	sleep 1
 }
 
@@ -11,7 +17,20 @@ append_to_env() {
 	echo "$1" >> ../.env
 }
 
+log 'ensuring IHMS/.env does not already exist'
+
+set +o errexit
+if [ -f ../.env ]
+then
+	error 'found IHMS/.env as already existing. cannot overwrite it. please move it to proceed.'
+fi
+set -o errexit
+
 log 'aquiring details to generate .env'
+
+read -p 'enter port to expose for frontend [3000]: ' frontend_port
+read -p 'enter port to expose for backend [5000]: ' backend_port
+
 
 read -p 'enter name for the pod [chatapp]: ' pod_name
 
@@ -43,13 +62,22 @@ do
 		break
 	fi
 
-	log '\npasswords do not match. please try again\n'
+	echo ''
+	log 'passwords do not match. please try again'
+	echo ''
 done
+
+database_password=database_password_2
+
 set -o errexit
 
 
-echo 'generating .env'
+log 'generating .env'
 
+append_to_env "# ports exposed to the hosting machine"
+append_to_env "frontend_port=$frontend_port"
+append_to_env "backend_port=$backend_port"
+append_to_env ""
 append_to_env "# value for all containers"
 append_to_env "pod_name=$pod_name"
 append_to_env ""
@@ -74,5 +102,3 @@ append_to_env "# vaules to create database container"
 append_to_env "database_container_name=$database_container_name"
 append_to_env "database_container_image_name=$database_container_image_name"
 append_to_env "database_container_volume_name=$database_container_volume_name"
-
-sleep 1
