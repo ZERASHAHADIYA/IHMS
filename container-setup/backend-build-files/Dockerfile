@@ -6,6 +6,7 @@ RUN echo 'copying necessary scripts to container /root'
 COPY ./container-setup/backend-build-files/node_install.sh .
 COPY ./container-setup/backend-build-files/npm_install.sh .
 COPY ./container-setup/backend-build-files/backend_server_start.sh .
+COPY ./container-setup/backend-build-files/initialize_database.sh .
 
 RUN echo 'copying ihms backend directory to /root/ihms-backend'
 COPY ./backend ./ihms-backend
