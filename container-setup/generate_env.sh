@@ -127,7 +127,9 @@ set +o errexit
 while true
 do
 	read -s -p 'enter password for the database: ' database_password_1
+	echo ''
 	read -s -p 'enter again: ' database_password_2
+	echo ''
 
 	if [ "$database_password_1" = "$database_password_2" ]
 	then
