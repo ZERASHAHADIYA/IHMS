@@ -17,6 +17,13 @@ append_to_env() {
 	echo "$1" >> ../.env
 }
 
+prompt() {
+	message="$1"
+	default_value="$2"
+
+	echo -n "$message [${default_value}]: "
+}
+
 log 'ensuring IHMS/.env does not already exist'
 
 set +o errexit
@@ -28,28 +35,93 @@ set -o errexit
 
 log 'aquiring details to generate .env'
 
-read -p 'enter port to expose for frontend [3000]: ' frontend_port
-read -p 'enter port to expose for backend [5000]: ' backend_port
+prompt 'enter port to expose for frontend' "$(grep -w 'frontend_port' ./default_values.txt | awk -F '=' '{print $2}')"
+read frontend_port
+if [ -z $frontend_port ]
+then
+	frontend_port="$(grep -w 'frontend_port' ./default_values.txt | awk -F '=' '{print $2}')"
+fi
+prompt 'enter port to expose for backend' "$(grep -w 'backend_port' ./default_values.txt | awk -F '=' '{print $2}')"
+read backend_port
+if [ -z $backend_port ]
+then
+	backend_port="$(grep -w 'backend_port' ./default_values.txt | awk -F '=' '{print $2}')"
+fi
 
 
-read -p 'enter name for the pod [chatapp]: ' pod_name
+prompt 'enter name for the pod' "$(grep -w 'pod_name' ./default_values.txt | awk -F '=' '{print $2}')"
+read pod_name
+if [ -z $pod_name ]
+then
+	pod_name="$(grep -w 'pod_name' ./default_values.txt | awk -F '=' '{print $2}')"
+fi
 
 
-read -p 'enter name of the frontend container [ihms_frontend]: ' frontend_container_name 
-read -p 'enter name of the frontend container image [ihms_frontend]: ' frontend_container_image_name 
-read -p 'enter name of the frontend container volume [ihms_frontend]: ' frontend_container_volume_name 
+prompt 'enter name of the frontend container' "$(grep -w 'frontend_container_name' ./default_values.txt | awk -F '=' '{print $2}')"
+read frontend_container_name 
+if [ -z $frontend_container_name  ]
+then
+	frontend_container_name="$(grep -w 'frontend_container_name' ./default_values.txt | awk -F '=' '{print $2}')"
+fi
+prompt 'enter name of the frontend container image' "$(grep -w 'frontend_container_image_name' ./default_values.txt | awk -F '=' '{print $2}')"
+read frontend_container_image_name 
+if [ -z $frontend_container_image_name  ]
+then
+	frontend_container_image_name="$(grep -w 'frontend_container_image_name' ./default_values.txt | awk -F '=' '{print $2}')"
+fi
+prompt 'enter name of the frontend container volume' "$(grep -w 'frontend_container_volume_name' ./default_values.txt | awk -F '=' '{print $2}')"
+read frontend_container_volume_name 
+if [ -z $frontend_container_volume_name  ]
+then
+	frontend_container_volume_name="$(grep -w 'frontend_container_volume_name' ./default_values.txt | awk -F '=' '{print $2}')"
+fi
 
 
-read -p 'enter name of the backend container [ihms_backend]: ' backend_container_name 
-read -p 'enter name of the backend container image [ihms_backend]: ' backend_container_image_name 
-read -p 'enter name of the backend container volume [ihms_backend]: ' backend_container_volume_name 
+prompt 'enter name of the backend container' "$(grep -w 'backend_container_name' ./default_values.txt | awk -F '=' '{print $2}')"
+read backend_container_name 
+if [ -z $backend_container_name  ]
+then
+	backend_container_name="$(grep -w 'backend_container_name' ./default_values.txt | awk -F '=' '{print $2}')"
+fi
+prompt 'enter name of the backend container image' "$(grep -w 'backend_container_image_name' ./default_values.txt | awk -F '=' '{print $2}')"
+read backend_container_image_name 
+if [ -z $backend_container_image_name  ]
+then
+	backend_container_image_name="$(grep -w 'backend_container_image_name' ./default_values.txt | awk -F '=' '{print $2}')"
+fi
+prompt 'enter name of the backend container volume' "$(grep -w 'backend_container_volume_name' ./default_values.txt | awk -F '=' '{print $2}')"
+read backend_container_volume_name 
+if [ -z $backend_container_volume_name  ]
+then
+	backend_container_volume_name="$(grep -w 'backend_container_volume_name' ./default_values.txt | awk -F '=' '{print $2}')"
+fi
 
 
-read -p 'enter name of the database container [ihms_database]: ' database_container_name 
-read -p 'enter name of the database container image [ihms_database]: ' database_container_image_name 
-read -p 'enter name of the database container volume [ihms_database]: ' database_container_volume_name 
+prompt 'enter name of the database container' "$(grep -w 'database_container_name' ./default_values.txt | awk -F '=' '{print $2}')"
+read database_container_name 
+if [ -z $database_container_name  ]
+then
+	database_container_name="$(grep -w 'database_container_name' ./default_values.txt | awk -F '=' '{print $2}')"
+fi
+prompt 'enter name of the database container image' "$(grep -w 'database_container_image_name' ./default_values.txt | awk -F '=' '{print $2}')"
+read database_container_image_name 
+if [ -z $database_container_image_name  ]
+then
+	database_container_image_name="$(grep -w 'database_container_image_name' ./default_values.txt | awk -F '=' '{print $2}')"
+fi
+prompt 'enter name of the database container volume' "$(grep -w 'database_container_volume_name' ./default_values.txt | awk -F '=' '{print $2}')"
+read database_container_volume_name 
+if [ -z $database_container_volume_name  ]
+then
+	database_container_volume_name="$(grep -w 'database_container_volume_name' ./default_values.txt | awk -F '=' '{print $2}')"
+fi
 
-read -p 'enter database name [campus_messaging]: ' database_name 
+prompt 'enter database name' "$(grep -w 'database_name' ./default_values.txt | awk -F '=' '{print $2}')"
+read database_name 
+if [ -z $database_name  ]
+then
+	database_name="$(grep -w 'database_name' ./default_values.txt | awk -F '=' '{print $2}')"
+fi
 
 set +o errexit
 while true
@@ -67,17 +139,31 @@ do
 	echo ''
 done
 
-database_password=database_password_2
+database_password=$database_password_2
 
 set -o errexit
 
 DATABASE_URL="postgresql://postgres:$database_password@localhost:5432/$database_name"
 
-read -p 'enter the number of characters for JWT secret [25]: ' jwt_string_size
+prompt 'enter the number of characters for JWT secret' "$(grep -w 'jwt_string_size' ./default_values.txt | awk -F '=' '{print $2}')"
+read jwt_string_size
+if [ -z $jwt_string_size ]
+then
+	jwt_string_size="$(grep -w 'jwt_string_size' ./default_values.txt | awk -F '=' '{print $2}')"
+fi
+set +o errexit
 JWT_SECRET=$(cat /dev/urandom | tr -cd A-Za-z0-9 | head -c $jwt_string_size)
+set -o errexit
 
-read -p 'enter the number of characters for message secret [25]: ' message_string_size
+prompt 'enter the number of characters for message secret' "$(grep -w 'message_string_size' ./default_values.txt | awk -F '=' '{print $2}')"
+read message_string_size
+if [ -z $message_string_size ]
+then
+	message_string_size="$(grep -w 'message_string_size' ./default_values.txt | awk -F '=' '{print $2}')"
+fi
+set +o errexit
 MESSAGE_SECRET=$(cat /dev/urandom | tr -cd A-Za-z0-9 | head -c $message_string_size)
+set -o errexit
 
 log 'generating .env'
 
