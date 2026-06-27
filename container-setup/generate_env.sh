@@ -71,6 +71,13 @@ database_password=database_password_2
 
 set -o errexit
 
+DATABASE_URL="postgresql://postgres:$database_password@localhost:5432/$database_name"
+
+read -p 'enter the number of characters for JWT secret [25]: ' jwt_string_size
+JWT_SECRET=$(cat /dev/urandom | tr -cd A-Za-z0-9 | head -c $jwt_string_size)
+
+read -p 'enter the number of characters for message secret [25]: ' message_string_size
+MESSAGE_SECRET=$(cat /dev/urandom | tr -cd A-Za-z0-9 | head -c $message_string_size)
 
 log 'generating .env'
 
@@ -102,3 +109,9 @@ append_to_env "# vaules to create database container"
 append_to_env "database_container_name=$database_container_name"
 append_to_env "database_container_image_name=$database_container_image_name"
 append_to_env "database_container_volume_name=$database_container_volume_name"
+append_to_env ""
+append_to_env ""
+append_to_env "#VALUES USED BY IHMS"
+append_to_env "DATABASE_URL=\"$DATABASE_URL\""
+append_to_env "JWT_SECRET=\"$JWT_SECRET\""
+append_to_env "MESSAGE_SECRET=\"$MESSAGE_SECRET\""
