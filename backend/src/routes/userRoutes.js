@@ -9,7 +9,9 @@ const roleMiddleware =
 require("../middleware/roleMiddleware");
 
 const {
-  createUser
+  createUser,
+  getProfile,
+  updateProfile
 } = require("../controllers/userController");
 
 router.post(
@@ -17,6 +19,18 @@ router.post(
   authMiddleware,
   roleMiddleware("ADMIN"),
   createUser
+);
+
+router.get(
+  "/profile",
+  authMiddleware,
+  getProfile
+);
+
+router.put(
+  "/profile",
+  authMiddleware,
+  updateProfile
 );
 
 module.exports = router;

@@ -11,7 +11,12 @@ const {
   createConversation,
   getConversations,
   addParticipant,
-  removeParticipant
+  removeParticipant,
+  promoteToAdmin,
+  demoteAdmin,
+  transferOwnership,
+  updateGroup,
+  leaveGroup
 } =
 require("../controllers/conversationController");
 
@@ -38,5 +43,36 @@ router.delete(
   authMiddleware,
   removeParticipant
 );
+
+router.put(
+  "/:id/promote/:userId",
+  authMiddleware,
+  promoteToAdmin
+);
+
+router.put(
+  "/:id/demote/:userId",
+  authMiddleware,
+  demoteAdmin
+);
+
+router.put(
+  "/:id/transfer/:userId",
+  authMiddleware,
+  transferOwnership
+);
+
+router.put(
+  "/:id",
+  authMiddleware,
+  updateGroup
+);
+
+router.delete(
+  "/:id/leave",
+  authMiddleware,
+  leaveGroup
+);
+
 
 module.exports = router;

@@ -184,7 +184,6 @@ io.to(conversationId).emit(
 const getMessages = async (req, res) => {
 
   try {
-
     const {
       conversationId
     } = req.params;

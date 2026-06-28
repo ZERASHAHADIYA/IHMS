@@ -249,6 +249,15 @@ const addParticipant = async (req, res) => {
       });
 
     }
+    if (!conversation.isGroup) {
+
+  return res.status(400).json({
+
+    message: "Cannot add participants to a personal conversation"
+
+  });
+
+}
    const admin =
   await prisma.conversationParticipant.findFirst({
 
@@ -328,6 +337,33 @@ const removeParticipant = async (req, res) => {
   try {
 
     const { id, userId } = req.params;
+   
+    const conversation =
+  await prisma.conversation.findUnique({
+
+    where: { id }
+
+  });
+
+if (!conversation) {
+
+  return res.status(404).json({
+
+    message: "Conversation not found"
+
+  });
+
+}
+
+if (!conversation.isGroup) {
+
+  return res.status(400).json({
+
+    message: "Cannot remove participants from a personal conversation"
+
+  });
+
+}
 
     const participant =
       await prisma.conversationParticipant.findFirst({
@@ -342,6 +378,17 @@ const removeParticipant = async (req, res) => {
 
       });
   
+  if (conversation.createdById === userId) {
+
+  return res.status(400).json({
+
+    message: "Group creator cannot be removed"
+
+  });
+
+}
+
+
     const admin =
   await prisma.conversationParticipant.findFirst({
 
@@ -375,6 +422,16 @@ if (!admin) {
       });
 
     }
+    
+    if (userId === req.user.userId) {
+
+  return res.status(400).json({
+
+    message: "Use Leave Group instead of removing yourself"
+
+  });
+
+}
 
     await prisma.conversationParticipant.delete({
 
@@ -405,9 +462,654 @@ if (!admin) {
 
 };
 
+const promoteToAdmin = async (req, res) => {
+
+  try {
+
+    const { id, userId } = req.params;
+
+    const conversation =
+      await prisma.conversation.findUnique({
+
+        where: { id }
+
+      });
+
+    if (!conversation) {
+
+      return res.status(404).json({
+
+        message: "Conversation not found"
+
+      });
+
+    }
+
+    if (!conversation.isGroup) {
+
+      return res.status(400).json({
+
+        message: "Only groups have admins"
+
+      });
+
+    }
+
+    const requester =
+      await prisma.conversationParticipant.findFirst({
+
+        where: {
+
+          conversationId: id,
+
+          userId: req.user.userId,
+
+          isAdmin: true
+
+        }
+
+      });
+
+    if (!requester) {
+
+      return res.status(403).json({
+
+        message: "Only admins can promote members"
+
+      });
+
+    }
+
+    const member =
+      await prisma.conversationParticipant.findFirst({
+
+        where: {
+
+          conversationId: id,
+
+          userId
+
+        }
+
+      });
+
+    if (!member) {
+
+      return res.status(404).json({
+
+        message: "Member not found"
+
+      });
+
+    }
+
+    if (member.isAdmin) {
+
+      return res.status(400).json({
+
+        message: "User is already an admin"
+
+      });
+
+    }
+
+    const updated =
+      await prisma.conversationParticipant.update({
+
+        where: {
+
+          id: member.id
+
+        },
+
+        data: {
+
+          isAdmin: true
+
+        }
+
+      });
+
+    res.json({
+
+      message: "Member promoted to admin",
+
+      participant: updated
+
+    });
+
+  } catch (error) {
+
+    console.log(error);
+
+    res.status(500).json({
+
+      message: "Server Error"
+
+    });
+
+  }
+
+};
+
+const demoteAdmin = async (req, res) => {
+
+  try {
+
+    const { id, userId } = req.params;
+
+    const conversation =
+      await prisma.conversation.findUnique({
+
+        where: { id }
+
+      });
+
+    if (!conversation) {
+
+      return res.status(404).json({
+
+        message: "Conversation not found"
+
+      });
+
+    }
+
+    if (!conversation.isGroup) {
+
+      return res.status(400).json({
+
+        message: "Only groups have admins"
+
+      });
+
+    }
+
+    const requester =
+      await prisma.conversationParticipant.findFirst({
+
+        where: {
+
+          conversationId: id,
+
+          userId: req.user.userId,
+
+          isAdmin: true
+
+        }
+
+      });
+
+    if (!requester) {
+
+      return res.status(403).json({
+
+        message: "Only admins can demote admins"
+
+      });
+
+    }
+
+    const target =
+      await prisma.conversationParticipant.findFirst({
+
+        where: {
+
+          conversationId: id,
+
+          userId
+
+        }
+
+      });
+
+    if (!target) {
+
+      return res.status(404).json({
+
+        message: "Member not found"
+
+      });
+
+    }
+
+    if (!target.isAdmin) {
+
+      return res.status(400).json({
+
+        message: "User is not an admin"
+
+      });
+
+    }
+
+    // 👑 Owner cannot be demoted
+    if (conversation.createdById === userId) {
+
+      return res.status(400).json({
+
+        message: "Group owner cannot be demoted"
+
+      });
+
+    }
+
+    // ⭐ Keep at least one admin
+    const adminCount =
+      await prisma.conversationParticipant.count({
+
+        where: {
+
+          conversationId: id,
+
+          isAdmin: true
+
+        }
+
+      });
+
+    if (adminCount === 1) {
+
+      return res.status(400).json({
+
+        message: "At least one admin must remain"
+
+      });
+
+    }
+
+    const updated =
+      await prisma.conversationParticipant.update({
+
+        where: {
+
+          id: target.id
+
+        },
+
+        data: {
+
+          isAdmin: false
+
+        }
+
+      });
+
+    res.json({
+
+      message: "Admin demoted successfully",
+
+      participant: updated
+
+    });
+
+  } catch (error) {
+
+    console.log(error);
+
+    res.status(500).json({
+
+      message: "Server Error"
+
+    });
+
+  }
+
+};
+
+const transferOwnership = async (req, res) => {
+
+  try {
+
+    const { id, userId } = req.params;
+
+    const conversation =
+      await prisma.conversation.findUnique({
+
+        where: { id }
+
+      });
+
+    if (!conversation) {
+
+      return res.status(404).json({
+
+        message: "Conversation not found"
+
+      });
+
+    }
+
+    if (!conversation.isGroup) {
+
+      return res.status(400).json({
+
+        message: "Only groups have an owner"
+
+      });
+
+    }
+
+    // Only owner can transfer ownership
+
+    if (conversation.createdById !== req.user.userId) {
+
+      return res.status(403).json({
+
+        message: "Only the owner can transfer ownership"
+
+      });
+
+    }
+
+    const newOwner =
+      await prisma.conversationParticipant.findFirst({
+
+        where: {
+
+          conversationId: id,
+
+          userId
+
+        }
+
+      });
+
+    if (!newOwner) {
+
+      return res.status(404).json({
+
+        message: "User is not a member"
+
+      });
+
+    }
+
+    // New owner must be admin
+
+    if (!newOwner.isAdmin) {
+
+      return res.status(400).json({
+
+        message: "Promote the member to admin before transferring ownership"
+
+      });
+
+    }
+
+    const updatedConversation =
+      await prisma.conversation.update({
+
+        where: {
+
+          id
+
+        },
+
+        data: {
+
+          createdById: userId
+
+        }
+
+      });
+
+    res.json({
+
+      message: "Ownership transferred successfully",
+
+      conversation: updatedConversation
+
+    });
+
+  } catch (error) {
+
+    console.log(error);
+
+    res.status(500).json({
+
+      message: "Server Error"
+
+    });
+
+  }
+
+};
+
+const updateGroup = async (req, res) => {
+
+  try {
+
+    const { id } = req.params;
+
+    const { name, description } = req.body;
+
+    const conversation =
+      await prisma.conversation.findUnique({
+
+        where: { id }
+
+      });
+
+    if (!conversation) {
+
+      return res.status(404).json({
+
+        message: "Conversation not found"
+
+      });
+
+    }
+
+    if (!conversation.isGroup) {
+
+      return res.status(400).json({
+
+        message: "Only groups can be updated"
+
+      });
+
+    }
+
+    const admin =
+      await prisma.conversationParticipant.findFirst({
+
+        where: {
+
+          conversationId: id,
+
+          userId: req.user.userId,
+
+          isAdmin: true
+
+        }
+
+      });
+
+    if (!admin) {
+
+      return res.status(403).json({
+
+        message: "Only admins can update group details"
+
+      });
+
+    }
+
+    const updatedConversation =
+      await prisma.conversation.update({
+
+        where: {
+
+          id
+
+        },
+
+        data: {
+
+          ...(name !== undefined && { name }),
+
+          ...(description !== undefined && { description })
+
+        }
+
+      });
+
+    res.json({
+
+      message: "Group updated successfully",
+
+      conversation: updatedConversation
+
+    });
+
+  } catch (error) {
+
+    console.log(error);
+
+    res.status(500).json({
+
+      message: "Server Error"
+
+    });
+
+  }
+
+};
+
+const leaveGroup = async (req, res) => {
+
+  try {
+
+    const { id } = req.params;
+
+    const conversation =
+      await prisma.conversation.findUnique({
+
+        where: { id }
+
+      });
+
+    if (!conversation) {
+
+      return res.status(404).json({
+
+        message: "Conversation not found"
+
+      });
+
+    }
+
+    if (!conversation.isGroup) {
+
+      return res.status(400).json({
+
+        message: "Cannot leave a personal conversation"
+
+      });
+
+    }
+
+    if (conversation.createdById === req.user.userId) {
+
+      return res.status(400).json({
+
+        message: "Transfer ownership before leaving"
+
+      });
+
+    }
+
+    const participant =
+      await prisma.conversationParticipant.findFirst({
+
+        where: {
+
+          conversationId: id,
+
+          userId: req.user.userId
+
+        }
+
+      });
+
+    if (!participant) {
+
+      return res.status(404).json({
+
+        message: "You are not a member"
+
+      });
+
+    }
+
+    if (participant.isAdmin) {
+
+      const adminCount =
+        await prisma.conversationParticipant.count({
+
+          where: {
+
+            conversationId: id,
+
+            isAdmin: true
+
+          }
+
+        });
+
+      if (adminCount === 1) {
+
+        return res.status(400).json({
+
+          message: "At least one admin must remain"
+
+        });
+
+      }
+
+    }
+
+    await prisma.conversationParticipant.delete({
+
+      where: {
+
+        id: participant.id
+
+      }
+
+    });
+
+    res.json({
+
+      message: "You left the group successfully"
+
+    });
+
+  } catch (error) {
+
+    console.log(error);
+
+    res.status(500).json({
+
+      message: "Server Error"
+
+    });
+
+  }
+
+};
+
 module.exports = {
   createConversation,
   getConversations,
   addParticipant,
-  removeParticipant
+  removeParticipant,
+  promoteToAdmin,
+  demoteAdmin,
+  transferOwnership,
+  updateGroup,
+  leaveGroup
 };
+
+  

@@ -8,6 +8,90 @@ const {
 const generatePassword =
 require("../utils/generatePassword");
 
+const getProfile = async (req, res) => {
+  try {
+    const user = await prisma.user.findUnique({
+      where: {
+        id: req.user.userId
+      },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        role: true,
+        department: true,
+        rollNo: true,
+        employeeId: true,
+        bio: true,
+        phoneNumber: true,
+        profileImage: true,
+        isActive: true,
+        createdAt: true
+      }
+    });
+
+    res.json(user);
+
+  } catch (error) {
+
+    console.log(error);
+
+    res.status(500).json({
+      message: "Server Error"
+    });
+
+  }
+};
+
+const updateProfile = async (req, res) => {
+
+  try {
+
+    const {
+      name,
+      bio,
+      phoneNumber,
+      profileImage
+    } = req.body;
+
+    const updatedUser =
+      await prisma.user.update({
+
+        where: {
+          id: req.user.userId
+        },
+
+        data: {
+          name,
+          bio,
+          phoneNumber,
+          profileImage
+        }
+
+      });
+
+    const {
+      password,
+      ...safeUser
+    } = updatedUser;
+
+    res.json({
+      message: "Profile updated successfully",
+      user: safeUser
+    });
+
+  } catch (error) {
+
+    console.log(error);
+
+    res.status(500).json({
+      message: "Server Error"
+    });
+
+  }
+
+};
+
 const createUser = async (req, res) => {
 
   try {
@@ -82,5 +166,9 @@ res.status(201).json({
 
 
 module.exports = {
-  createUser
+  createUser,
+  getProfile,
+  updateProfile
 };
+
+  
