@@ -12,7 +12,7 @@ database_container_volume_name=$(grep -w 'database_container_volume_name' ../../
 pod_name=$(grep -w 'pod_name' ../../.env | awk -F '=' '{print $2}')
 
 podman run \
-	-it \
+	${1}t \
 	--rm  \
 	-e POSTGRES_DB=$database_name \
 	-e POSTGRES_PASSWORD=$database_password \

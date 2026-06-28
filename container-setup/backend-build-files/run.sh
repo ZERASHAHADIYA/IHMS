@@ -9,7 +9,7 @@ backend_container_volume_name=$(grep -w 'backend_container_volume_name' ../../.e
 pod_name=$(grep -w 'pod_name' ../../.env | awk -F '=' '{print $2}')
 
 podman run \
-	-it \
+	${1}t \
 	--rm  \
 	--name $backend_container_name \
 	--pod $pod_name \
