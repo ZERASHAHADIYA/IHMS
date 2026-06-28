@@ -3,7 +3,7 @@ ENV POSTGRES_DB=campus_messaging
 ENV POSTGRES_PASSWORD=new_password
 
 RUN echo 'copying postgres starting script to /root'
-COPY ./container-setup/database-build-files/database_start.sh /root
+COPY ./container-setup/database-build-files/database_server_start.sh /root
 
 RUN echo 'placing necessary files for postgres installation to required locations'
 COPY ./container-setup/database-build-files/apt.postgresql.org.asc /usr/share/postgresql-common/pgdg/
@@ -16,4 +16,4 @@ RUN apt update && apt install ca-certificates -y
 RUN echo 'installing postgresql-18'
 RUN apt update && apt install postgresql-18 -y
 
-CMD bash /root/database_start.sh "$POSTGRES_DB" "$POSTGRES_PASSWORD"
+CMD bash /root/database_server_start.sh "$POSTGRES_DB" "$POSTGRES_PASSWORD"
