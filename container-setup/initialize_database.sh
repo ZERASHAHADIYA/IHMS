@@ -1,17 +1,36 @@
 set -o errexit
 set -o pipefail
 set -o nounset
-set -x
+
+log() {
+	echo "log: $1"
+	sleep 1
+}
 
 backend_container_name=$(grep -w 'backend_container_name' ../.env | awk -F '=' '{print $2}')
 database_container_name=$(grep -w 'database_container_name' ../.env | awk -F '=' '{print $2}')
 
-tmux new-session -d -s init
-tmux send-keys -t init "echo 'waiting for backend and database containers to start' && sleep 5 && podman exec -it $backend_container_name /bin/bash -c 'source /root/initialize_database.sh' && podman stop $backend_container_name && podman stop $database_container_name && exit" Enter
+log 'starting backend container'
+cd backend-build-files
+source run.sh -d
+cd - >/dev/null
+sleep 1
+podman logs $backend_container_name
+sleep 1
 
-tmux split-pane -h -t init 
-tmux send-keys -t init 'cd backend-build-files && source run.sh ; exit' Enter
+log 'starting database container'
+cd database-build-files
+source run.sh -d
+cd - >/dev/null
+sleep 1
+podman logs $database_container_name
+sleep 1
 
-tmux split-pane -v -t init
-tmux send-keys -t init 'cd database-build-files && source run.sh ; exit' Enter
-tmux attach -t init
+log 'initializing database from backend container'
+podman exec -it $backend_container_name bash -c 'source /root/initialize_database.sh'
+
+log 'stopping backend container'
+podman exec -it $backend_container_name bash -c "kill -9 $(podman top $backend_container_name | grep backend_server_start.sh | awk -F ' ' '{print $2}' | grep -v 1)"
+
+log 'stopping database container'
+podman exec -it $database_container_name bash -c "kill -9 $(podman top $database_container_name | grep database_server_start.sh | awk -F ' ' '{print $2}' | grep -v 1)"
