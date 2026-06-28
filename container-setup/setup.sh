@@ -28,3 +28,5 @@ source ./build_containers.sh
 source ./create_volumes.sh
 source ./create_pod.sh
 source ./initialize_database.sh
+
+log 'you can now use ../run_containers.sh whenever you want to start IHMS'
