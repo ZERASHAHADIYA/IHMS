@@ -1,5 +1,5 @@
 const prisma = require("../config/prisma");
-
+const logAudit = require("../utils/auditLogger");
 const createConversation = async (req, res) => {
 
   try {
@@ -165,6 +165,8 @@ if (!isGroup) {
 
     console.log(error);
 
+    
+
     res.status(500).json({
       message: "Server Error"
     });
@@ -306,19 +308,35 @@ if (existingParticipant) {
 }
 
     const participant =
-      await prisma.conversationParticipant.create({
+await prisma.conversationParticipant.create({
 
-        data: {
+    data:{
 
-          conversationId: id,
+        conversationId:id,
 
-          userId
+        userId
 
-        }
+    }
 
-      });
+});
 
-    res.status(201).json(participant);
+await logAudit({
+
+    action:"ADD_MEMBER",
+
+    performedBy:req.user.userId,
+
+    targetUser:userId,
+
+    metadata:{
+
+        conversationId:id
+
+    }
+
+});
+
+res.status(201).json(participant);
 
   } catch (error) {
 
@@ -432,24 +450,39 @@ if (!admin) {
   });
 
 }
+await prisma.conversationParticipant.delete({
 
-    await prisma.conversationParticipant.delete({
+  where: {
 
-      where: {
+    id: participant.id
 
-        id: participant.id
+  }
 
-      }
+});
 
-    });
+await logAudit({
 
-    res.json({
+  action: "REMOVE_MEMBER",
 
-      message:
-        "Participant removed successfully"
+  performedBy: req.user.userId,
 
-    });
+  targetUser: userId,
 
+  metadata: {
+
+    conversationId: id
+
+  }
+
+});
+
+res.json({
+
+  message:
+    "Participant removed successfully"
+
+});
+    
   } catch (error) {
 
     console.log(error);
@@ -569,6 +602,21 @@ const promoteToAdmin = async (req, res) => {
         }
 
       });
+      await logAudit({
+
+  action: "PROMOTE_ADMIN",
+
+  performedBy: req.user.userId,
+
+  targetUser: userId,
+
+  metadata: {
+
+    conversationId: id
+
+  }
+
+});
 
     res.json({
 
@@ -734,6 +782,21 @@ const demoteAdmin = async (req, res) => {
         }
 
       });
+      await logAudit({
+
+  action: "DEMOTE_ADMIN",
+
+  performedBy: req.user.userId,
+
+  targetUser: userId,
+
+  metadata: {
+
+    conversationId: id
+
+  }
+
+});
 
     res.json({
 
@@ -853,6 +916,21 @@ const transferOwnership = async (req, res) => {
         }
 
       });
+      await logAudit({
+
+  action: "TRANSFER_OWNERSHIP",
+
+  performedBy: req.user.userId,
+
+  targetUser: userId,
+
+  metadata: {
+
+    conversationId: id
+
+  }
+
+});
 
     res.json({
 
@@ -955,6 +1033,19 @@ const updateGroup = async (req, res) => {
 
       });
 
+      await logAudit({
+
+  action: "UPDATE_GROUP",
+
+  performedBy: req.user.userId,
+
+  metadata: {
+
+    conversationId: id
+
+  }
+
+});
     res.json({
 
       message: "Group updated successfully",
@@ -1080,6 +1171,19 @@ const leaveGroup = async (req, res) => {
 
     });
 
+    await logAudit({
+
+  action: "LEAVE_GROUP",
+
+  performedBy: req.user.userId,
+
+  metadata: {
+
+    conversationId: id
+
+  }
+
+});
     res.json({
 
       message: "You left the group successfully"
@@ -1090,10 +1194,84 @@ const leaveGroup = async (req, res) => {
 
     console.log(error);
 
+
+
     res.status(500).json({
 
       message: "Server Error"
 
+    });
+
+  }
+
+};
+
+const deleteGroup = async (req, res) => {
+
+  try {
+
+    const { id } = req.params;
+
+    const conversation = await prisma.conversation.findUnique({
+      where: { id }
+    });
+
+    if (!conversation) {
+      return res.status(404).json({
+        message: "Conversation not found"
+      });
+    }
+
+    if (!conversation.isGroup) {
+      return res.status(400).json({
+        message: "Only groups can be deleted"
+      });
+    }
+
+    if (conversation.createdById !== req.user.userId) {
+      return res.status(403).json({
+        message: "Only the owner can delete the group"
+      });
+    }
+
+   await logAudit({
+
+  action: "DELETE_GROUP",
+
+  performedBy: req.user.userId,
+
+  metadata: {
+
+    conversationId: id,
+
+    groupName: conversation.name
+
+  }
+
+});
+
+await prisma.conversation.delete({
+
+  where: {
+
+    id
+
+  }
+
+});
+
+res.json({
+
+  message: "Group deleted successfully"
+
+});
+
+  } catch (error) {
+
+    console.log(error);
+
+    res.status(500).json({
+      message: "Server Error"
     });
 
   }
@@ -1109,7 +1287,8 @@ module.exports = {
   demoteAdmin,
   transferOwnership,
   updateGroup,
-  leaveGroup
+  leaveGroup,
+  deleteGroup
 };
 
   

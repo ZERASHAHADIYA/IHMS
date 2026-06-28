@@ -1,5 +1,8 @@
 const jwt = require("jsonwebtoken");
 
+    const prisma =
+require("../config/prisma");
+
 const socketHandler = (io) => {
 
   io.use((socket, next) => {
@@ -50,6 +53,7 @@ const socketHandler = (io) => {
   });
 
   io.on("connection", async (socket) => {
+    
 
     console.log(
 
@@ -59,8 +63,9 @@ const socketHandler = (io) => {
 
     );
 
-    const prisma =
-require("../config/prisma");
+socket.join(
+          `user:${socket.user.userId}`
+        );
 
 await prisma.user.update({
 
@@ -72,12 +77,20 @@ await prisma.user.update({
 
   data: {
 
-    isActive: true
+    isActive: true,
+
+    lastSeen: new Date()
 
   }
 
 });
 
+io.emit(
+  "userOnline",
+  {
+    userId: socket.user.userId
+  }
+);
 
 
     socket.on(
@@ -95,9 +108,7 @@ await prisma.user.update({
           `Joined ${conversationId}`
 
         );
-        socket.join(
-          `user:${socket.user.userId}`
-        );
+        
 
       }
 
@@ -147,23 +158,42 @@ socket.on(
   }
 
 );
-
- socket.on("disconnect", async (reason) => {
+socket.on("disconnect", async (reason) => {
 
   console.log("DISCONNECT EVENT FIRED");
   console.log("Reason:", reason);
 
-  await prisma.user.update({
-    where: {
-      id: socket.user.userId
-    },
-    data: {
-      isActive: false,
-      lastSeen: new Date()
-    }
-  });
+  try {
 
-  console.log("Updated user offline");
+    await prisma.user.update({
+
+      where: {
+        id: socket.user.userId
+      },
+
+      data: {
+
+        isActive: false,
+
+        lastSeen: new Date()
+
+      }
+
+    });
+
+    io.emit("userOffline", {
+
+      userId: socket.user.userId
+
+    });
+
+    console.log("Updated user offline");
+
+  } catch (error) {
+
+    console.log(error);
+
+  }
 
 });
 
@@ -171,5 +201,8 @@ socket.on(
 
 };
 
+
+
 module.exports =
 socketHandler;
+

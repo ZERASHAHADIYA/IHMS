@@ -16,7 +16,8 @@ const {
   demoteAdmin,
   transferOwnership,
   updateGroup,
-  leaveGroup
+  leaveGroup,
+  deleteGroup
 } =
 require("../controllers/conversationController");
 
@@ -74,5 +75,9 @@ router.delete(
   leaveGroup
 );
 
-
+router.delete(
+  "/:id",
+  authMiddleware,
+  deleteGroup
+);
 module.exports = router;
