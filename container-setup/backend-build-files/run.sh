@@ -2,11 +2,17 @@ set -o errexit
 set -o pipefail
 set -o nounset
 
+log() {
+	echo "log: $1"
+	sleep 1
+}
+
 backend_container_name=$(grep -w 'backend_container_name' ../../.env | awk -F '=' '{print $2}')
 backend_container_image_name=$(grep -w 'backend_container_image_name' ../../.env | awk -F '=' '{print $2}')
 backend_container_volume_name=$(grep -w 'backend_container_volume_name' ../../.env | awk -F '=' '{print $2}')
 
 pod_name=$(grep -w 'pod_name' ../../.env | awk -F '=' '{print $2}')
+
 
 podman run \
 	${1}t \
@@ -15,3 +21,6 @@ podman run \
 	--pod $pod_name \
 	--volume $backend_container_volume_name:/root/ \
 	$backend_container_image_name:latest
+
+log 'ensuring that the backend container contains the current contents of IHMS/.env'
+podman cp ../../.env ${backend_container_name}:/root/ihms-backend

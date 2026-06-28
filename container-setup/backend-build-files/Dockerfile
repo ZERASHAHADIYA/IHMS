@@ -11,9 +11,6 @@ COPY ./container-setup/backend-build-files/initialize_database.sh .
 RUN echo 'copying ihms backend directory to /root/ihms-backend'
 COPY ./backend ./ihms-backend
 
-RUN echo 'copying IHMS/.env to container /root/ihms-backend'
-COPY ./.env ./ihms-backend
-
 RUN echo 'installing curl'
 RUN apt update && apt install curl -y
 
