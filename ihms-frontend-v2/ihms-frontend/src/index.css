@@ -1,0 +1,95 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --surface: #ffffff;
+    --surface-2: #f8f8fb;
+    --surface-3: #f1f1f7;
+    --surface-4: #e8e8f0;
+    --ink: #0f0f23;
+    --ink-2: #3d3d5c;
+    --ink-3: #6e6e96;
+    --ink-4: #a0a0c0;
+    --ink-5: #c8c8e0;
+  }
+
+  .dark {
+    --surface: #1c1d2b;
+    --surface-2: #16171f;
+    --surface-3: #111219;
+    --surface-4: #2a2b3a;
+    --ink: #f1f1f7;
+    --ink-2: #cfd0e0;
+    --ink-3: #9b9cb8;
+    --ink-4: #6e6f8c;
+    --ink-5: #4b4c66;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; }
+  html { height: 100%; }
+  body {
+    height: 100%;
+    margin: 0;
+    font-family: 'Inter', system-ui, sans-serif;
+    background: var(--surface-3);
+    color: var(--ink);
+    -webkit-font-smoothing: antialiased;
+    transition: background-color 150ms ease, color 150ms ease;
+  }
+  #root { height: 100%; }
+}
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--ink-5); border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: var(--ink-4); }
+
+/* Conversation list item active highlight */
+.conv-item-active {
+  background: linear-gradient(90deg, var(--surface-4) 0%, var(--surface-3) 100%);
+}
+
+/* Message bubble entrance */
+@keyframes bubbleIn {
+  from { opacity: 0; transform: translateY(6px) scale(0.97); }
+  to   { opacity: 1; transform: translateY(0)    scale(1); }
+}
+.bubble-enter { animation: bubbleIn 160ms ease-out; }
+
+/* Typing dots */
+@keyframes typingBounce {
+  0%, 60%, 100% { transform: translateY(0); }
+  30%           { transform: translateY(-5px); }
+}
+.typing-dot:nth-child(1) { animation: typingBounce 1.2s ease-in-out 0s infinite; }
+.typing-dot:nth-child(2) { animation: typingBounce 1.2s ease-in-out 0.2s infinite; }
+.typing-dot:nth-child(3) { animation: typingBounce 1.2s ease-in-out 0.4s infinite; }
+
+/* Nav rail tooltip */
+.nav-tooltip {
+  position: absolute;
+  left: calc(100% + 10px);
+  top: 50%;
+  transform: translateY(-50%);
+  background: #0f0f23;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 500;
+  padding: 4px 10px;
+  border-radius: 6px;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 150ms;
+  z-index: 50;
+}
+.nav-rail-btn:hover .nav-tooltip { opacity: 1; }
+
+/* Focus ring */
+:focus-visible {
+  outline: 2px solid #4f6ef7;
+  outline-offset: 2px;
+}
