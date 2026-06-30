@@ -24,7 +24,7 @@ fi
 log 'proceeding with the setup'
 
 source ./generate_env.sh
-source ./build_containers.sh
+source ./build_images.sh
 source ./create_volumes.sh
 source ./create_pod.sh
 source ./initialize_database.sh
